@@ -51,22 +51,3 @@ app.post('/comments', function (req, res) {
 
 app.listen(3000);
 console.log('Server is running on port 3000');
-```
-The `comments.json` file is a simple JSON file that contains an array of comments:
-```json
-[
-    {
-        "author": "Daniel Lo Nigro",
-        "text": "Hello ReactJS.NET World!"
-    }
-]
-```
-The `index.html` file contains the following content:
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>CommentBox</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.4.2/react.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.4.2/react-dom.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.

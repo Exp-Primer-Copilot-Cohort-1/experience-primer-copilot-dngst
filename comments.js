@@ -1,53 +1,62 @@
-// create web server
-var express = require('express');
-var app = express();
-var bodyParser = require('body-parser');
+
+var http = require('http');
 var fs = require('fs');
+var url = require('url');
+var qs = require('querystring');
 var path = require('path');
 
-app.use(bodyParser.json()); // to support JSON-encoded bodies
-app.use(bodyParser.urlencoded({ // to support URL-encoded bodies
-    extended: true
-}));
-
-app.use(express.static('public'));
-
-app.get('/', function (req, res) {
-    res.sendFile(path.join(__dirname + '/index.html'));
-});
-
-app.get('/comments', function (req, res) {
-    fs.readFile('comments.json', 'utf8', function (err, data) {
-        if (err) {
-            console.log(err);
-            res.status(500).send('Cannot read comments.json');
-        } else {
-            res.setHeader('Content-Type', 'application/json');
-            res.send(data);
-        }
-    });
-});
-
-app.post('/comments', function (req, res) {
-    fs.readFile('comments.json', 'utf8', function (err, data) {
-        if (err) {
-            console.log(err);
-            res.status(500).send('Cannot read comments.json');
-        } else {
-            var comments = JSON.parse(data);
-            comments.push(req.body);
-            fs.writeFile('comments.json', JSON.stringify(comments, null, 4), function (err) {
-                if (err) {
-                    console.log(err);
-                    res.status(500).send('Cannot write comments.json');
-                } else {
-                    res.setHeader('Content-Type', 'application/json');
-                    res.send(JSON.stringify(comments, null, 4));
-                }
+// create server
+http.createServer(function (request, response) {
+    var _url = request.url;
+    var queryData = url.parse(_url, true).query;
+    var pathname = url.parse(_url, true).pathname;
+    if (pathname === '/comment') {
+        if (request.method === 'POST') {
+            var body = '';
+            request.on('data', function (data) {
+                body += data;
             });
+            request.on('end', function () {
+                var post = qs.parse(body);
+                console.log(post);
+                fs.appendFile('data/comment.txt', post.author + ' : ' + post.description + '\n', 'utf8', function (err) {
+                    response.writeHead(302, { Location: '/' });
+                    response.end();
+                });
+            });
+        } else {
+            response.writeHead(404);
+            response.end('Not found');
         }
-    });
-});
-
-app.listen(3000);
-console.log('Server is running on port 3000');
+    } else {
+        if (pathname === '/') {
+            fs.readFile('data/comment.txt', 'utf8', function (err, data) {
+                var title = 'WEB - create';
+                var list = '';
+                var template = `
+                <!doctype html>
+                <html>
+                <head>
+                    <title>WEB1 - ${title}</title>
+                    <meta charset="utf-8">
+                </head>
+                <body>
+                    <h1><a href="/">WEB</a></h1>
+                    <ul>
+                        ${list}
+                    </ul>
+                    <a href="/create">create</a>
+                    <h2>${title}</h2>
+                    <p>${data}</p>
+                </body>
+                </html>
+                `;
+                response.writeHead(200);
+                response.end(template);
+            });
+        } else {
+            response.writeHead(404);
+            response.end('Not found');
+        }
+    }
+}).listen(3000);
